@@ -1,0 +1,91 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="60" x2="1450" y2="860" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7FBFF"/>
+      <stop offset="0.55" stop-color="#EEF6FF"/>
+      <stop offset="1" stop-color="#FFF8EF"/>
+    </linearGradient>
+    <linearGradient id="cardBlue" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#A8D7FF"/>
+      <stop offset="1" stop-color="#D7ECFF"/>
+    </linearGradient>
+    <linearGradient id="cardMint" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#A9F2D1"/>
+      <stop offset="1" stop-color="#D8FFF0"/>
+    </linearGradient>
+    <linearGradient id="cardPurple" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#CFC3FF"/>
+      <stop offset="1" stop-color="#EFE9FF"/>
+    </linearGradient>
+    <linearGradient id="cardGold" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FFE57D"/>
+      <stop offset="1" stop-color="#FFF3C7"/>
+    </linearGradient>
+    <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="22" stdDeviation="22" flood-color="#83A7CC" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" rx="42" fill="url(#bg)"/>
+  <circle cx="250" cy="140" r="120" fill="#D6EEFF" fill-opacity="0.8"/>
+  <circle cx="1410" cy="150" r="150" fill="#FCE8CA" fill-opacity="0.8"/>
+  <circle cx="1280" cy="780" r="180" fill="#E4DBFF" fill-opacity="0.75"/>
+
+  <text x="90" y="110" fill="#5C85B3" font-size="30" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700" letter-spacing="0.22em">SILVER VOICE STT</text>
+  <text x="90" y="182" fill="#111827" font-size="68" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="800">고령자 특화 한국어 STT MVP 현황</text>
+  <text x="90" y="236" fill="#4B5563" font-size="28" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="500">웹 서비스, STT 추론, 교정 루프, AI-Hub 학습 파이프라인까지 연결된 현재 상태 요약</text>
+
+  <g filter="url(#shadow)">
+    <rect x="90" y="300" width="320" height="198" rx="34" fill="url(#cardBlue)"/>
+    <text x="122" y="352" fill="#244A74" font-size="24" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">1. 사용자 웹</text>
+    <text x="122" y="398" fill="#1F2937" font-size="22" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">• 파일 업로드 / 브라우저 녹음</text>
+    <text x="122" y="434" fill="#1F2937" font-size="22" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">• SSE 상태 표시</text>
+    <text x="122" y="470" fill="#1F2937" font-size="22" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">• 결과 수정 / 저장</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="445" y="300" width="320" height="198" rx="34" fill="url(#cardMint)"/>
+    <text x="477" y="352" fill="#185949" font-size="24" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">2. 백엔드 API</text>
+    <text x="477" y="398" fill="#1F2937" font-size="22" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">• JWT 인증 / 업로드 / 작업 관리</text>
+    <text x="477" y="434" fill="#1F2937" font-size="22" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">• PostgreSQL / Redis / MinIO</text>
+    <text x="477" y="470" fill="#1F2937" font-size="22" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">• Celery Worker 비동기 처리</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="800" y="300" width="320" height="198" rx="34" fill="url(#cardPurple)"/>
+    <text x="832" y="352" fill="#5B3FA6" font-size="24" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">3. STT 추론</text>
+    <text x="832" y="398" fill="#1F2937" font-size="22" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">• 16kHz 변환 / VAD / 후처리</text>
+    <text x="832" y="434" fill="#1F2937" font-size="22" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">• segment timestamp / confidence</text>
+    <text x="832" y="470" fill="#1F2937" font-size="22" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">• mock / 실제 로컬 모델 모드</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="1155" y="300" width="320" height="198" rx="34" fill="url(#cardGold)"/>
+    <text x="1187" y="352" fill="#8A5C0A" font-size="24" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="700">4. 학습 파이프라인</text>
+    <text x="1187" y="398" fill="#1F2937" font-size="22" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">• AI-Hub 샘플 파서 리팩토링</text>
+    <text x="1187" y="434" fill="#1F2937" font-size="22" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">• 96개 세그먼트 manifest 생성</text>
+    <text x="1187" y="470" fill="#1F2937" font-size="22" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">• LoRA / encoder 중심 학습 골격</text>
+  </g>
+
+  <path d="M410 398H445" stroke="#8DB4D9" stroke-width="6" stroke-linecap="round"/>
+  <path d="M765 398H800" stroke="#8DB4D9" stroke-width="6" stroke-linecap="round"/>
+  <path d="M1120 398H1155" stroke="#8DB4D9" stroke-width="6" stroke-linecap="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="90" y="560" width="690" height="248" rx="36" fill="white" fill-opacity="0.9"/>
+    <text x="130" y="620" fill="#111827" font-size="34" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="800">현재 구현 완료</text>
+    <text x="130" y="675" fill="#374151" font-size="24" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">• 서비스형 MVP 구조 완성</text>
+    <text x="130" y="713" fill="#374151" font-size="24" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">• 업로드 → 추론 → 저장 → 수정 → export 흐름 연결</text>
+    <text x="130" y="751" fill="#374151" font-size="24" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">• AI-Hub 샘플 데이터 기반 학습 준비 완료</text>
+    <text x="130" y="789" fill="#374151" font-size="24" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">• 관리자 분석 / correction 데이터 축적 구조 확보</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="820" y="560" width="655" height="248" rx="36" fill="#111827"/>
+    <text x="860" y="620" fill="#F9FAFB" font-size="34" font-family="Pretendard, Apple SD Gothic Neo, sans-serif" font-weight="800">다음 구현 우선순위</text>
+    <text x="860" y="675" fill="#E5E7EB" font-size="24" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">1. 학습 의존성 설치 후 실제 fine-tuning 실행</text>
+    <text x="860" y="713" fill="#E5E7EB" font-size="24" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">2. forced alignment 기반 세그먼트 정교화</text>
+    <text x="860" y="751" fill="#E5E7EB" font-size="24" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">3. CTranslate2 변환 및 운영 모델 승격 자동화</text>
+    <text x="860" y="789" fill="#E5E7EB" font-size="24" font-family="Pretendard, Apple SD Gothic Neo, sans-serif">4. CI/CD, 모니터링, 보안, 테스트 확대</text>
+  </g>
+</svg>

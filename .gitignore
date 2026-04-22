@@ -1,0 +1,24 @@
+.next
+node_modules
+dist
+coverage
+.pytest_cache
+.mypy_cache
+__pycache__
+.venv
+.vs
+.env
+.env.local
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+.DS_Store
+apps/api/htmlcov
+apps/api/.coverage
+services/**/.coverage
+minio-data
+postgres-data
+models/
+training data/
+*.log
