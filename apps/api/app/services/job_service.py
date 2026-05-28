@@ -10,6 +10,8 @@ from app.services.audit import record_audit_log
 
 logger = logging.getLogger(__name__)
 
+ACTIVE_JOB_STATUSES = {"queued", "preprocessing", "running", "postprocessing"}
+
 
 def get_active_model_version(db: Session) -> ModelVersion | None:
     return db.scalar(select(ModelVersion).where(ModelVersion.is_active.is_(True)).limit(1))
@@ -57,6 +59,19 @@ def get_job_for_user(db: Session, *, job_id: str, user_id: str | None = None) ->
             joinedload(AudioJob.model_version),
         )
     )
+
+
+def delete_job_record(db: Session, *, job: AudioJob, user_id: str) -> None:
+    record_audit_log(
+        db,
+        actor_user_id=user_id,
+        target_type="audio_job",
+        target_id=job.id,
+        action="job_deleted",
+        metadata={"original_filename": job.original_filename, "status": job.status},
+    )
+    db.delete(job)
+    db.commit()
 
 
 def save_correction(

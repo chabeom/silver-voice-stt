@@ -60,6 +60,10 @@ function translateBackendMessage(message: string) {
     return "이미 처리 중이거나 완료된 작업입니다.";
   }
 
+  if (lower.includes("active jobs cannot be deleted")) {
+    return "처리 중인 작업은 완료되거나 실패한 뒤 삭제해 주세요.";
+  }
+
   if (lower.includes("field required")) {
     return "필수 입력 항목이 비어 있습니다.";
   }
@@ -230,6 +234,20 @@ export function fetchJob(token: string, jobId: string) {
 
 export function fetchJobs(token: string) {
   return apiFetch<PaginatedJobs>("/jobs", {}, token);
+}
+
+export async function deleteJob(token: string, jobId: string) {
+  const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw createApiError(response.status, body, "작업 삭제에 실패했습니다.");
+  }
 }
 
 export function fetchJobResult(token: string, jobId: string) {

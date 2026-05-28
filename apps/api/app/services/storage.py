@@ -66,6 +66,26 @@ class StorageService:
         Path(target_path).write_bytes(source.read_bytes())
         return target_path
 
+    def delete_file(self, *, object_key: str | None) -> bool:
+        if not object_key:
+            return False
+
+        if self.backend == "minio":
+            try:
+                self.client.delete_object(Bucket=self.settings.minio_bucket, Key=object_key)
+                return True
+            except (BotoCoreError, ClientError):
+                return False
+
+        target_path = self.local_root / object_key
+        try:
+            if target_path.exists():
+                target_path.unlink()
+                return True
+        except OSError:
+            return False
+        return False
+
     def create_presigned_get_url(self, *, object_key: str, expires_in: int = 3600) -> str:
         if self.backend == "minio":
             return self.public_client.generate_presigned_url(

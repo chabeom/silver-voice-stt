@@ -22,6 +22,8 @@ from app.schemas.job import (
 )
 from app.services.audit import record_audit_log
 from app.services.job_service import (
+    ACTIVE_JOB_STATUSES,
+    delete_job_record,
     enqueue_transcription_job,
     get_active_model_version,
     get_job_for_user,
@@ -105,6 +107,20 @@ def get_job(job_id: str, db: DbSession, user: CurrentUser) -> AudioJob:
     if not job:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
     return job
+
+
+@router.delete("/{job_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_job(job_id: str, db: DbSession, storage: StorageDep, user: CurrentUser) -> None:
+    job = get_job_for_user(db, job_id=job_id, user_id=user.id)
+    if not job:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
+    if job.status in ACTIVE_JOB_STATUSES:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Active jobs cannot be deleted")
+
+    object_keys = [job.storage_object_key, job.processed_object_key]
+    delete_job_record(db, job=job, user_id=user.id)
+    for object_key in object_keys:
+        storage.delete_file(object_key=object_key)
 
 
 @router.get("/{job_id}/result", response_model=JobDetailResponse)

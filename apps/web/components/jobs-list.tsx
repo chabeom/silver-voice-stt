@@ -4,19 +4,22 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 import type { Job } from "@silver-voice/shared-types";
-import { Card, CardContent, CardHeader, CardTitle, Progress } from "@silver-voice/ui";
+import { Button, Card, CardContent, CardHeader, CardTitle, Progress } from "@silver-voice/ui";
 
 import { getAccessToken } from "@/lib/auth";
-import { fetchJobs, getErrorMessage } from "@/lib/api";
+import { deleteJob, fetchJobs, getErrorMessage } from "@/lib/api";
 import { getStatusLabel } from "@/lib/status";
 
 import { FeedbackPopup } from "./feedback-popup";
 import { StatusBadge } from "./status-badge";
 
+const ACTIVE_STATUSES = new Set(["queued", "preprocessing", "running", "postprocessing"]);
+
 export function JobsList() {
   const token = useMemo(() => getAccessToken(), []);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [errorPopup, setErrorPopup] = useState("");
+  const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -24,6 +27,23 @@ export function JobsList() {
       .then((data) => setJobs(data.items))
       .catch((err) => setErrorPopup(getErrorMessage(err, "작업 목록을 불러오지 못했습니다.")));
   }, [token]);
+
+  const handleDelete = async (job: Job) => {
+    if (!token || ACTIVE_STATUSES.has(job.status)) return;
+
+    const confirmed = window.confirm(`"${job.original_filename}" 작업을 삭제할까요? 전사 결과와 정정 이력도 함께 삭제됩니다.`);
+    if (!confirmed) return;
+
+    setDeletingJobId(job.id);
+    try {
+      await deleteJob(token, job.id);
+      setJobs((currentJobs) => currentJobs.filter((item) => item.id !== job.id));
+    } catch (err) {
+      setErrorPopup(getErrorMessage(err, "작업 삭제에 실패했습니다."));
+    } finally {
+      setDeletingJobId(null);
+    }
+  };
 
   if (!token) {
     return (
@@ -46,6 +66,8 @@ export function JobsList() {
 
         {jobs.map((job) => {
           const progress = job.progress * 100;
+          const isDeleting = deletingJobId === job.id;
+          const isActive = ACTIVE_STATUSES.has(job.status);
 
           return (
             <Card key={job.id} className="overflow-hidden">
@@ -87,9 +109,21 @@ export function JobsList() {
                   <Progress value={progress} />
                 </div>
 
-                <Link href={`/jobs/${job.id}`} className="inline-flex font-semibold text-sky-700">
-                  상세 보기
-                </Link>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <Link href={`/jobs/${job.id}`} className="inline-flex font-semibold text-sky-700">
+                    상세 보기
+                  </Link>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="min-h-10 rounded-2xl border-red-200/70 bg-red-50/80 px-4 text-sm text-red-700 hover:shadow-[0_14px_24px_rgba(185,28,28,0.12)]"
+                    disabled={isActive || isDeleting}
+                    title={isActive ? "처리 중인 작업은 완료되거나 실패한 뒤 삭제할 수 있습니다." : "작업 삭제"}
+                    onClick={() => void handleDelete(job)}
+                  >
+                    {isDeleting ? "삭제 중..." : "삭제"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           );
