@@ -25,6 +25,8 @@ export function UploadWorkspace() {
   const [activeJob, setActiveJob] = useState<Job | null>(null);
   const [models, setModels] = useState<ModelVersion[]>([]);
   const [selectedModel, setSelectedModel] = useState("");
+  const [enableSpeakerDiarization, setEnableSpeakerDiarization] = useState(false);
+  const [expectedSpeakers, setExpectedSpeakers] = useState(2);
   const [message, setMessage] = useState("로그인 후 음성 파일을 업로드해 주세요.");
   const [errorPopup, setErrorPopup] = useState("");
   const [redirectAfterPopup, setRedirectAfterPopup] = useState(false);
@@ -128,7 +130,10 @@ export function UploadWorkspace() {
     }
 
     try {
-      const job = await createJob(currentToken, uploadedJob.id, selectedModel);
+      const job = await createJob(currentToken, uploadedJob.id, selectedModel, {
+        enableSpeakerDiarization,
+        expectedSpeakers,
+      });
       setToken(currentToken);
       setActiveJob(job);
       setMessage("STT 작업을 시작했습니다.");
@@ -223,8 +228,42 @@ export function UploadWorkspace() {
                   ))}
                 </select>
 
+                <div className="rounded-2xl border border-sky-200/70 bg-white/70 p-4">
+                  <label className="flex cursor-pointer items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={enableSpeakerDiarization}
+                      onChange={(event) => setEnableSpeakerDiarization(event.target.checked)}
+                      className="mt-1 h-5 w-5 accent-sky-600"
+                    />
+                    <span>
+                      <span className="block font-semibold text-slate-950">화자 분리 사용</span>
+                      <span className="mt-1 block text-sm leading-6 text-slate-600">
+                        인터뷰나 대화 음성을 화자별로 구분합니다. 1인 음성은 끄는 것이 더 빠릅니다.
+                      </span>
+                    </span>
+                  </label>
+
+                  {enableSpeakerDiarization ? (
+                    <label className="mt-4 block text-sm font-semibold text-slate-700">
+                      예상 화자 수
+                      <select
+                        className="surface-select mt-2"
+                        value={expectedSpeakers}
+                        onChange={(event) => setExpectedSpeakers(Number(event.target.value))}
+                      >
+                        {[2, 3, 4, 5].map((count) => (
+                          <option key={count} value={count}>
+                            {count}명
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
+                </div>
+
                 <Button onClick={() => void handleStartJob()} className="w-full text-lg">
-                  STT 실행
+                  {enableSpeakerDiarization ? "화자 분리 + STT 실행" : "STT 실행"}
                 </Button>
               </div>
             ) : null}

@@ -6,6 +6,7 @@ coverage
 .mypy_cache
 __pycache__
 .venv
+.venv-training/
 .vs
 .env
 .env.local
@@ -22,3 +23,7 @@ postgres-data
 models/
 training data/
 *.log
+*.zip
+outputs/
+**/__pycache__/
+*.inspect.ndjson

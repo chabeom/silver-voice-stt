@@ -55,6 +55,9 @@ class Settings(BaseSettings):
     stt_compute_type: str = "int8"
     stt_device: str = "cpu"
     stt_mock_mode: bool = True
+    stt_diarization_model: str = "pyannote/speaker-diarization-community-1"
+    stt_diarization_device: str = "cpu"
+    hf_token: str = ""
     enable_noise_reduction: bool = False
 
     @field_validator("api_cors_origins", mode="before")

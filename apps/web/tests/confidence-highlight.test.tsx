@@ -21,5 +21,26 @@ describe("ConfidenceHighlight", () => {
 
     expect(screen.getByText("이 구간은 다시 확인하는 것을 권장합니다.")).toBeInTheDocument();
   });
-});
 
+  it("renders the assigned speaker", () => {
+    render(
+      <ConfidenceHighlight
+        segment={{
+          id: "seg-speaker",
+          segment_index: 0,
+          start_sec: 0,
+          end_sec: 1.5,
+          text: "안녕하세요",
+          normalized_text: "안녕하세요",
+          confidence: 0.9,
+          speaker_display_name: "화자 2",
+          speaker_confidence: 0.8,
+          is_low_confidence: false
+        }}
+      />
+    );
+
+    expect(screen.getByText("화자 2")).toBeInTheDocument();
+    expect(screen.getByText("화자 배정 일치도 80.0%")).toBeInTheDocument();
+  });
+});

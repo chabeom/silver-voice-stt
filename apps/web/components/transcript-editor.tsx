@@ -75,6 +75,15 @@ export function TranscriptEditor({ detail, token }: { detail: JobDetail; token: 
                   </p>
                 </div>
               </div>
+
+              {detail.transcript?.diarization_applied ? (
+                <div className="signal-banner px-4 py-4">
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Speaker Diarization</p>
+                  <p className="mt-2 text-base font-semibold text-sky-800">
+                    화자 {detail.transcript.speaker_count ?? 0}명을 분리했습니다.
+                  </p>
+                </div>
+              ) : null}
             </CardContent>
           </Card>
 

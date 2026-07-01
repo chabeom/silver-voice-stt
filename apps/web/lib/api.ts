@@ -213,7 +213,15 @@ export function fetchModels(token: string) {
   return apiFetch<ModelVersion[]>("/models", {}, token);
 }
 
-export function createJob(token: string, audioJobId: string, modelVersionId?: string) {
+export function createJob(
+  token: string,
+  audioJobId: string,
+  modelVersionId?: string,
+  options: {
+    enableSpeakerDiarization?: boolean;
+    expectedSpeakers?: number | null;
+  } = {},
+) {
   return apiFetch<Job>(
     "/jobs",
     {
@@ -222,6 +230,8 @@ export function createJob(token: string, audioJobId: string, modelVersionId?: st
         audio_job_id: audioJobId,
         model_version_id: modelVersionId ?? null,
         enable_noise_reduction: false,
+        enable_speaker_diarization: options.enableSpeakerDiarization ?? false,
+        expected_speakers: options.enableSpeakerDiarization ? (options.expectedSpeakers ?? null) : null,
       }),
     },
     token,

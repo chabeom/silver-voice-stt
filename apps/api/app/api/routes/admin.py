@@ -1,5 +1,6 @@
 import csv
 import io
+import json
 
 from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
@@ -9,7 +10,13 @@ from app.api.deps import AdminUser, DbSession, StorageDep
 from app.models import AudioJob, Correction, ModelVersion, Transcript
 from app.schemas.admin import ModelComparisonRow, OverviewStatsResponse
 from app.schemas.job import JobDetailResponse, JobResponse
-from app.services.job_service import get_job_for_user
+from app.services.job_service import (
+    get_job_for_user,
+    get_segment_diarization_metadata,
+    get_segment_confidence_metadata,
+    get_transcript_diarization_metadata,
+    get_transcript_confidence_metadata,
+)
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -53,6 +60,8 @@ def get_admin_job_detail(job_id: str, _: AdminUser, db: DbSession, storage: Stor
             "full_text": job.transcript.full_text,
             "normalized_text": job.transcript.normalized_text,
             "average_confidence": job.transcript.average_confidence,
+            **get_transcript_confidence_metadata(job.transcript),
+            **get_transcript_diarization_metadata(job.transcript),
             "low_confidence_ratio": job.transcript.low_confidence_ratio,
             "total_duration": job.transcript.total_duration,
             "processing_ms": job.transcript.processing_ms,
@@ -65,6 +74,8 @@ def get_admin_job_detail(job_id: str, _: AdminUser, db: DbSession, storage: Stor
                     "text": segment.text,
                     "normalized_text": segment.normalized_text,
                     "confidence": segment.confidence,
+                    **get_segment_confidence_metadata(job.transcript, segment.segment_index, segment.confidence),
+                    **get_segment_diarization_metadata(job.transcript, segment.segment_index),
                     "is_low_confidence": segment.is_low_confidence,
                     "avg_logprob": segment.avg_logprob,
                     "no_speech_prob": segment.no_speech_prob,
@@ -170,4 +181,40 @@ def export_corrections(_: AdminUser, db: DbSession) -> StreamingResponse:
         iter([buffer.getvalue()]),
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=corrections-export.csv"},
+    )
+
+
+@router.get("/export/confidence-calibration")
+def export_confidence_calibration(_: AdminUser, db: DbSession) -> StreamingResponse:
+    rows = db.execute(
+        select(Correction, Transcript)
+        .join(Transcript, Transcript.id == Correction.transcript_id)
+        .order_by(Correction.created_at.asc())
+    ).all()
+
+    lines = []
+    for correction, transcript in rows:
+        raw_result = transcript.raw_result_json or {}
+        raw_confidence = raw_result.get("average_raw_confidence", transcript.average_confidence)
+        lines.append(
+            json.dumps(
+                {
+                    "correction_id": correction.id,
+                    "job_id": correction.job_id,
+                    "model_version_id": correction.model_version_id,
+                    "raw_confidence": raw_confidence,
+                    "predicted_text": correction.original_text,
+                    "reference_text": correction.corrected_text,
+                },
+                ensure_ascii=False,
+            )
+        )
+
+    content = "\n".join(lines)
+    if content:
+        content += "\n"
+    return StreamingResponse(
+        iter([content]),
+        media_type="application/x-ndjson",
+        headers={"Content-Disposition": "attachment; filename=confidence-calibration-evaluation.jsonl"},
     )

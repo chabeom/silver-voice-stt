@@ -28,6 +28,11 @@ export interface TranscriptSegment {
   text: string;
   normalized_text: string;
   confidence: number;
+  raw_confidence?: number | null;
+  calibrated_confidence?: number | null;
+  speaker_label?: string | null;
+  speaker_display_name?: string | null;
+  speaker_confidence?: number | null;
   is_low_confidence: boolean;
   avg_logprob?: number | null;
   no_speech_prob?: number | null;
@@ -41,6 +46,11 @@ export interface Transcript {
   full_text: string;
   normalized_text: string;
   average_confidence: number;
+  average_raw_confidence?: number | null;
+  average_calibrated_confidence?: number | null;
+  calibration_applied?: boolean;
+  diarization_applied?: boolean;
+  speaker_count?: number;
   low_confidence_ratio: number;
   total_duration: number;
   processing_ms: number;
@@ -109,4 +119,3 @@ export interface JobEvent {
   average_confidence?: number | null;
   error_message?: string | null;
 }
-

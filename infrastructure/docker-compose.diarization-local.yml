@@ -1,0 +1,10 @@
+services:
+  api:
+    image: silver-voice-diarization-deps:local
+    environment:
+      PYTHONPATH: /workspace/apps/api:/workspace/services/stt_inference:/workspace/services/training_pipeline
+
+  worker:
+    image: silver-voice-diarization-deps:local
+    environment:
+      PYTHONPATH: /workspace/apps/api:/workspace/services/stt_inference:/workspace/services/training_pipeline

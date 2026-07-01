@@ -6,6 +6,7 @@ from training_pipeline.dataset import (
     normalize_transcript_text,
 )
 from training_pipeline.manifest import train_valid_test_split
+from training_pipeline.diarization import choose_longest_speaker, chunk_turns, merge_speaker_turns, split_text_by_weights
 
 
 def test_extract_aihub_transcript_prefers_dialogue_turns():
@@ -76,3 +77,24 @@ def test_train_valid_test_split_keeps_small_dataset_usable():
     assert len(splits["valid"]) >= 1
     assert len(splits["test"]) >= 1
     assert sum(len(items) for items in splits.values()) == len(records)
+
+
+def test_diarization_helpers_select_and_chunk_longest_speaker():
+    turns = [
+        {"speaker": "A", "start_sec": 0.0, "end_sec": 1.0},
+        {"speaker": "B", "start_sec": 1.0, "end_sec": 10.0},
+        {"speaker": "B", "start_sec": 10.2, "end_sec": 20.0},
+    ]
+
+    assert choose_longest_speaker(turns) == "B"
+    merged = merge_speaker_turns(turns, speaker="B", merge_gap_seconds=0.3)
+    chunks = chunk_turns(merged, max_chunk_seconds=8.0)
+
+    assert len(merged) == 1
+    assert len(chunks) == 3
+
+
+def test_split_text_by_weights_keeps_all_words_in_order():
+    chunks = split_text_by_weights("하나 둘 셋 넷 다섯 여섯", [1.0, 2.0])
+
+    assert " ".join(chunks) == "하나 둘 셋 넷 다섯 여섯"

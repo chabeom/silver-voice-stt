@@ -14,7 +14,10 @@ from app.main import app
 
 @pytest.fixture(autouse=True)
 def _patch_enqueue(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("app.api.routes.jobs.enqueue_transcription_job", lambda job_id, enable_noise_reduction: "test-task-id")
+    monkeypatch.setattr(
+        "app.api.routes.jobs.enqueue_transcription_job",
+        lambda job_id, enable_noise_reduction, enable_speaker_diarization=False, expected_speakers=None: "test-task-id",
+    )
 
 
 @pytest.fixture

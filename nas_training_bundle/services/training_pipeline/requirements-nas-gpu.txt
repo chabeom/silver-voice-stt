@@ -1,0 +1,12 @@
+# NAS/Jupyter GPU environment dependencies.
+# Do not install torch from this file. The JupyterLab image should provide the
+# CUDA-matched PyTorch build for the RTX GPU.
+datasets==3.2.0
+transformers==4.47.1
+accelerate==1.2.1
+jiwer==3.0.5
+soundfile==0.13.0
+librosa==0.10.2.post1
+peft==0.14.0
+sentencepiece==0.2.0
+safetensors>=0.4.5,<0.6

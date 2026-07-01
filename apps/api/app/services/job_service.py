@@ -13,6 +13,55 @@ logger = logging.getLogger(__name__)
 ACTIVE_JOB_STATUSES = {"queued", "preprocessing", "running", "postprocessing"}
 
 
+def get_transcript_confidence_metadata(transcript: Transcript) -> dict:
+    raw_result = transcript.raw_result_json or {}
+    return {
+        "average_raw_confidence": raw_result.get("average_raw_confidence"),
+        "average_calibrated_confidence": raw_result.get(
+            "average_calibrated_confidence",
+            transcript.average_confidence,
+        ),
+        "calibration_applied": bool(raw_result.get("calibration_applied", False)),
+    }
+
+
+def get_segment_confidence_metadata(transcript: Transcript, segment_index: int, confidence: float) -> dict:
+    raw_result = transcript.raw_result_json or {}
+    for segment in raw_result.get("segments", []):
+        if int(segment.get("segment_index", -1)) != segment_index:
+            continue
+        return {
+            "raw_confidence": segment.get("raw_confidence", segment.get("confidence")),
+            "calibrated_confidence": segment.get("calibrated_confidence", confidence),
+        }
+    return {"raw_confidence": None, "calibrated_confidence": confidence}
+
+
+def get_transcript_diarization_metadata(transcript: Transcript) -> dict:
+    raw_result = transcript.raw_result_json or {}
+    return {
+        "diarization_applied": bool(raw_result.get("diarization_applied", False)),
+        "speaker_count": int(raw_result.get("speaker_count", 0)),
+    }
+
+
+def get_segment_diarization_metadata(transcript: Transcript, segment_index: int) -> dict:
+    raw_result = transcript.raw_result_json or {}
+    for segment in raw_result.get("segments", []):
+        if int(segment.get("segment_index", -1)) != segment_index:
+            continue
+        return {
+            "speaker_label": segment.get("speaker_label"),
+            "speaker_display_name": segment.get("speaker_display_name"),
+            "speaker_confidence": segment.get("speaker_confidence"),
+        }
+    return {
+        "speaker_label": None,
+        "speaker_display_name": None,
+        "speaker_confidence": None,
+    }
+
+
 def get_active_model_version(db: Session) -> ModelVersion | None:
     return db.scalar(select(ModelVersion).where(ModelVersion.is_active.is_(True)).limit(1))
 
@@ -22,10 +71,20 @@ def build_diff(original_text: str, corrected_text: str) -> dict:
     return {"changes": [line for line in diff if line.startswith(("- ", "+ "))]}
 
 
-def enqueue_transcription_job(job_id: str, enable_noise_reduction: bool) -> str:
+def enqueue_transcription_job(
+    job_id: str,
+    enable_noise_reduction: bool,
+    enable_speaker_diarization: bool = False,
+    expected_speakers: int | None = None,
+) -> str:
     from app.tasks.stt_tasks import process_audio_job
 
-    task = process_audio_job.delay(job_id=job_id, enable_noise_reduction=enable_noise_reduction)
+    task = process_audio_job.delay(
+        job_id=job_id,
+        enable_noise_reduction=enable_noise_reduction,
+        enable_speaker_diarization=enable_speaker_diarization,
+        expected_speakers=expected_speakers,
+    )
     return task.id
 
 

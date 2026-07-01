@@ -14,5 +14,6 @@ email-validator==2.2.0
 httpx==0.28.1
 requests==2.32.5
 faster-whisper==1.1.1
+pyannote.audio>=4.0,<5
 pytest==8.3.4
 pytest-asyncio==0.25.0

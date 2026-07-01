@@ -1,0 +1,2 @@
+# Install after the NAS CUDA PyTorch environment is confirmed.
+pyannote.audio>=4.0,<5

@@ -47,7 +47,13 @@ class JobTask(Task):
 
 
 @celery_app.task(bind=True, base=JobTask)
-def process_audio_job(self, job_id: str, enable_noise_reduction: bool = False) -> dict:
+def process_audio_job(
+    self,
+    job_id: str,
+    enable_noise_reduction: bool = False,
+    enable_speaker_diarization: bool = False,
+    expected_speakers: int | None = None,
+) -> dict:
     from stt_inference.config import InferenceSettings
     from stt_inference.pipeline import run_stt_pipeline
 
@@ -78,6 +84,8 @@ def process_audio_job(self, job_id: str, enable_noise_reduction: bool = False) -
             input_path=downloaded_path,
             settings=InferenceSettings.from_env(),
             enable_noise_reduction=enable_noise_reduction,
+            enable_speaker_diarization=enable_speaker_diarization,
+            expected_speakers=expected_speakers,
             job_id=job_id,
             display_name=job.original_filename,
         )

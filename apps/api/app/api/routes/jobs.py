@@ -27,6 +27,10 @@ from app.services.job_service import (
     enqueue_transcription_job,
     get_active_model_version,
     get_job_for_user,
+    get_segment_diarization_metadata,
+    get_segment_confidence_metadata,
+    get_transcript_diarization_metadata,
+    get_transcript_confidence_metadata,
     list_user_jobs,
     save_correction,
 )
@@ -51,6 +55,13 @@ def _looks_like_legacy_mock_text(text: str, job_id: str) -> bool:
 
 @router.post("", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
 def create_job(payload: CreateJobRequest, db: DbSession, user: CurrentUser) -> AudioJob:
+    settings = get_settings()
+    if payload.enable_speaker_diarization and not settings.stt_mock_mode and not settings.hf_token:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="화자 분리 기능을 사용하려면 서버에 HF_TOKEN 설정이 필요합니다.",
+        )
+
     job = db.scalar(select(AudioJob).where(AudioJob.id == payload.audio_job_id, AudioJob.user_id == user.id))
     if not job:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Audio upload not found")
@@ -75,14 +86,24 @@ def create_job(payload: CreateJobRequest, db: DbSession, user: CurrentUser) -> A
     job.progress = 0.05
     job.processing_started_at = now
     job.error_message = None
-    job.task_id = enqueue_transcription_job(job.id, payload.enable_noise_reduction)
+    job.task_id = enqueue_transcription_job(
+        job.id,
+        payload.enable_noise_reduction,
+        payload.enable_speaker_diarization,
+        payload.expected_speakers,
+    )
     record_audit_log(
         db,
         actor_user_id=user.id,
         target_type="audio_job",
         target_id=job.id,
         action="job_started",
-        metadata={"task_id": job.task_id, "enable_noise_reduction": payload.enable_noise_reduction},
+        metadata={
+            "task_id": job.task_id,
+            "enable_noise_reduction": payload.enable_noise_reduction,
+            "enable_speaker_diarization": payload.enable_speaker_diarization,
+            "expected_speakers": payload.expected_speakers,
+        },
     )
     db.commit()
     db.refresh(job)
@@ -155,6 +176,8 @@ def get_job_result(job_id: str, db: DbSession, storage: StorageDep, user: Curren
             "full_text": mock_display_text or job.transcript.full_text,
             "normalized_text": mock_display_text or job.transcript.normalized_text,
             "average_confidence": job.transcript.average_confidence,
+            **get_transcript_confidence_metadata(job.transcript),
+            **get_transcript_diarization_metadata(job.transcript),
             "low_confidence_ratio": job.transcript.low_confidence_ratio,
             "total_duration": job.transcript.total_duration,
             "processing_ms": job.transcript.processing_ms,
@@ -167,6 +190,8 @@ def get_job_result(job_id: str, db: DbSession, storage: StorageDep, user: Curren
                     "text": mock_display_text or segment.text,
                     "normalized_text": mock_display_text or segment.normalized_text,
                     "confidence": segment.confidence,
+                    **get_segment_confidence_metadata(job.transcript, segment.segment_index, segment.confidence),
+                    **get_segment_diarization_metadata(job.transcript, segment.segment_index),
                     "is_low_confidence": segment.is_low_confidence,
                     "avg_logprob": segment.avg_logprob,
                     "no_speech_prob": segment.no_speech_prob,

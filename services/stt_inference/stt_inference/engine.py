@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import Path
 
 from stt_inference.confidence import logprob_to_confidence
@@ -54,6 +56,7 @@ class WhisperEngine:
                         "end_sec": 2.4,
                         "text": text,
                         "confidence": 0.78,
+                        "raw_confidence": 0.78,
                         "avg_logprob": -0.24,
                         "no_speech_prob": 0.03,
                         "tokens_json": [
@@ -89,13 +92,15 @@ class WhisperEngine:
                 for word in (segment.words or [])
             ]
             avg_logprob = float(getattr(segment, "avg_logprob", 0.0))
+            raw_confidence = logprob_to_confidence(avg_logprob)
             serialized_segments.append(
                 {
                     "segment_index": index,
                     "start_sec": float(segment.start),
                     "end_sec": float(segment.end),
                     "text": segment.text.strip(),
-                    "confidence": logprob_to_confidence(avg_logprob),
+                    "confidence": raw_confidence,
+                    "raw_confidence": raw_confidence,
                     "avg_logprob": avg_logprob,
                     "no_speech_prob": float(getattr(segment, "no_speech_prob", 0.0)),
                     "tokens_json": words,

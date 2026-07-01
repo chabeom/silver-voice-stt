@@ -32,7 +32,12 @@ def test_upload_and_create_job(client):
     create_response = client.post(
         "/api/v1/jobs",
         headers=auth_headers(token),
-        json={"audio_job_id": job_id, "enable_noise_reduction": False},
+        json={
+            "audio_job_id": job_id,
+            "enable_noise_reduction": False,
+            "enable_speaker_diarization": True,
+            "expected_speakers": 2,
+        },
     )
     assert create_response.status_code == 201
     assert create_response.json()["status"] == "queued"

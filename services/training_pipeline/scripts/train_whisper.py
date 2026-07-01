@@ -27,10 +27,12 @@ def main() -> None:
     parser.add_argument("--lora-r", type=int, default=16)
     parser.add_argument("--lora-alpha", type=int, default=32)
     parser.add_argument("--lora-dropout", type=float, default=0.05)
+    parser.add_argument("--lora-adapter-path")
     parser.add_argument("--max-train-samples", type=int)
     parser.add_argument("--max-eval-samples", type=int)
     parser.add_argument("--min-audio-seconds", type=float, default=0.3)
     parser.add_argument("--max-audio-seconds", type=float, default=30.0)
+    parser.add_argument("--max-label-tokens", type=int)
     parser.add_argument("--dataloader-num-workers", type=int, default=0)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--report-to", default="none")
@@ -62,10 +64,12 @@ def main() -> None:
         lora_r=args.lora_r,
         lora_alpha=args.lora_alpha,
         lora_dropout=args.lora_dropout,
+        lora_adapter_path=args.lora_adapter_path,
         max_train_samples=args.max_train_samples,
         max_eval_samples=args.max_eval_samples,
         min_audio_seconds=args.min_audio_seconds,
         max_audio_seconds=args.max_audio_seconds,
+        max_label_tokens=args.max_label_tokens,
         gradient_checkpointing=not args.disable_gradient_checkpointing,
         use_fp16=args.fp16,
         use_bf16=args.bf16,
