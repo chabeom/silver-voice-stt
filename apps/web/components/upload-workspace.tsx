@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type DragEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -20,6 +20,7 @@ export function UploadWorkspace() {
   const router = useRouter();
   const [token, setToken] = useState(() => getAccessToken());
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadedJob, setUploadedJob] = useState<Job | null>(null);
   const [activeJob, setActiveJob] = useState<Job | null>(null);
@@ -53,6 +54,40 @@ export function UploadWorkspace() {
     setUploadProgress(0);
     setMessage("로그인이 필요합니다.");
     openErrorPopup("로그인이 만료되었습니다. 다시 로그인해 주세요.", true);
+  }
+
+  function selectUploadFile(file: File | null) {
+    setSelectedFile(file);
+    setUploadedJob(null);
+    setActiveJob(null);
+    setUploadProgress(0);
+
+    if (file) {
+      setMessage(`${file.name} 파일이 선택되었습니다. 파일 업로드를 눌러 대기열에 추가하세요.`);
+    }
+  }
+
+  function isAudioLikeFile(file: File) {
+    if (file.type.startsWith("audio/")) return true;
+    return /\.(wav|mp3|m4a|webm|mp4|flac|aac|ogg)$/i.test(file.name);
+  }
+
+  function preventFileDragDefaults(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  function handleFileDrop(event: DragEvent<HTMLDivElement>) {
+    preventFileDragDefaults(event);
+    setIsDraggingFile(false);
+
+    const file = Array.from(event.dataTransfer.files).find(isAudioLikeFile);
+    if (!file) {
+      openErrorPopup("음성 파일을 드래그해서 올려주세요. wav, mp3, m4a, webm, mp4 파일을 사용할 수 있습니다.");
+      return;
+    }
+
+    selectUploadFile(file);
   }
 
   useEffect(() => {
@@ -184,11 +219,44 @@ export function UploadWorkspace() {
             </div>
 
             <div className="space-y-4">
-              <Input
-                type="file"
-                accept="audio/*"
-                onChange={(inputEvent) => setSelectedFile(inputEvent.target.files?.[0] ?? null)}
-              />
+              <div
+                className={`rounded-[2rem] border-2 border-dashed px-6 py-7 text-center transition ${
+                  isDraggingFile
+                    ? "border-sky-500 bg-sky-100/80 shadow-[0_22px_60px_rgba(14,165,233,0.22)]"
+                    : "border-sky-200 bg-white/70 hover:border-sky-400 hover:bg-sky-50/80"
+                }`}
+                onDragEnter={(event) => {
+                  preventFileDragDefaults(event);
+                  setIsDraggingFile(true);
+                }}
+                onDragOver={(event) => {
+                  preventFileDragDefaults(event);
+                  setIsDraggingFile(true);
+                }}
+                onDragLeave={(event) => {
+                  preventFileDragDefaults(event);
+                  setIsDraggingFile(false);
+                }}
+                onDrop={handleFileDrop}
+              >
+                <p className="text-base font-semibold text-slate-950">
+                  {isDraggingFile ? "여기에 놓으면 파일이 선택됩니다" : "음성 파일을 드래그 앤 드롭하거나 직접 선택하세요"}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  wav, mp3, m4a, webm, mp4 등 오디오 파일을 사용할 수 있습니다.
+                </p>
+                <Input
+                  className="mt-5 cursor-pointer bg-white/80"
+                  type="file"
+                  accept="audio/*"
+                  onChange={(inputEvent) => selectUploadFile(inputEvent.target.files?.[0] ?? null)}
+                />
+                {selectedFile ? (
+                  <p className="mt-4 rounded-2xl bg-sky-950 px-4 py-3 text-sm font-semibold text-white">
+                    선택됨: {selectedFile.name}
+                  </p>
+                ) : null}
+              </div>
               <Button
                 className="w-full text-lg"
                 onClick={() => selectedFile && void handleUpload(selectedFile, "file")}
