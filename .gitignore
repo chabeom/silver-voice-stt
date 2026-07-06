@@ -20,7 +20,7 @@ apps/api/.coverage
 services/**/.coverage
 minio-data
 postgres-data
-models/
+/models/
 training data/
 *.log
 *.zip
