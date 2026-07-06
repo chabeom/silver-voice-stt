@@ -23,7 +23,7 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title=settings.project_name, version="0.1.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.api_cors_origins,
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -35,4 +35,3 @@ app.include_router(uploads.router, prefix="/api/v1")
 app.include_router(jobs.router, prefix="/api/v1")
 app.include_router(models.router, prefix="/api/v1")
 app.include_router(admin.router, prefix="/api/v1")
-

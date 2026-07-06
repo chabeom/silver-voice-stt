@@ -1,7 +1,6 @@
 from functools import lru_cache
 from typing import List
 
-from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -13,7 +12,7 @@ class Settings(BaseSettings):
 
     api_host: str = "0.0.0.0"
     api_port: int = 8000
-    api_cors_origins: List[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+    api_cors_origins: str = "http://localhost:3000"
 
     database_url: str = "sqlite:///./silver_voice.db"
     redis_url: str = "redis://localhost:6379/0"
@@ -37,17 +36,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
 
     max_upload_mb: int = 100
-    allowed_audio_types: List[str] = Field(
-        default_factory=lambda: [
-            "audio/wav",
-            "audio/x-wav",
-            "audio/mpeg",
-            "audio/mp3",
-            "audio/webm",
-            "audio/mp4",
-            "audio/x-m4a",
-        ]
-    )
+    allowed_audio_types: str = "audio/wav,audio/x-wav,audio/mpeg,audio/mp3,audio/webm,audio/mp4,audio/x-m4a"
 
     default_model_version: str = "whisper-ko-elderly-v0"
     low_confidence_threshold: float = 0.55
@@ -61,19 +50,18 @@ class Settings(BaseSettings):
     hf_token: str = ""
     enable_noise_reduction: bool = False
 
-    @field_validator("api_cors_origins", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, value: str | List[str]) -> List[str]:
+    def _split_csv_setting(self, value: str | List[str]) -> List[str]:
         if isinstance(value, str):
             return [item.strip() for item in value.split(",") if item.strip()]
         return value
 
-    @field_validator("allowed_audio_types", mode="before")
-    @classmethod
-    def parse_audio_types(cls, value: str | List[str]) -> List[str]:
-        if isinstance(value, str):
-            return [item.strip() for item in value.split(",") if item.strip()]
-        return value
+    @property
+    def cors_origins(self) -> List[str]:
+        return self._split_csv_setting(self.api_cors_origins)
+
+    @property
+    def allowed_audio_type_list(self) -> List[str]:
+        return self._split_csv_setting(self.allowed_audio_types)
 
 
 @lru_cache
