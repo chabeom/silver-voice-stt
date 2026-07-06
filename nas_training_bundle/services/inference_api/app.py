@@ -12,6 +12,7 @@ from typing import Any
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 
 DEFAULT_BASE_MODEL = "openai/whisper-medium"
@@ -45,6 +46,341 @@ def _resolve_path(path_value: str) -> Path:
 
 def _normalize_text(text: str) -> str:
     return " ".join(str(text).strip().split())
+
+
+def _render_test_ui() -> str:
+    return """<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Silver Voice STT Test</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #dbeafe;
+      --sky: #0284c7;
+      --blue: #2563eb;
+      --bg: #eef7ff;
+      --card: rgba(255,255,255,.86);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 15% 20%, rgba(56,189,248,.25), transparent 32rem),
+        radial-gradient(circle at 85% 10%, rgba(37,99,235,.18), transparent 28rem),
+        linear-gradient(135deg, #f8fbff 0%, var(--bg) 100%);
+    }
+    main {
+      width: min(980px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 44px 0;
+    }
+    .hero {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .kicker {
+      margin: 0;
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      max-width: 760px;
+      font-size: clamp(36px, 7vw, 74px);
+      line-height: .94;
+      letter-spacing: -.06em;
+    }
+    .copy {
+      max-width: 720px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.75;
+    }
+    .card {
+      border: 1px solid rgba(125, 211, 252, .55);
+      border-radius: 34px;
+      background: var(--card);
+      box-shadow: 0 28px 80px rgba(37, 99, 235, .13);
+      backdrop-filter: blur(18px);
+      padding: clamp(20px, 4vw, 34px);
+    }
+    .drop {
+      display: grid;
+      place-items: center;
+      min-height: 230px;
+      border: 2px dashed #93c5fd;
+      border-radius: 28px;
+      background: rgba(239, 246, 255, .78);
+      text-align: center;
+      transition: .18s ease;
+    }
+    .drop.dragging {
+      border-color: var(--blue);
+      background: rgba(191, 219, 254, .75);
+      transform: translateY(-2px);
+    }
+    .drop strong {
+      display: block;
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+    .drop span {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    input[type=file] {
+      margin-top: 22px;
+      width: min(100%, 560px);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: white;
+      padding: 14px;
+      font-size: 15px;
+    }
+    .controls {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      margin-top: 18px;
+    }
+    button {
+      border: 0;
+      border-radius: 18px;
+      padding: 16px 18px;
+      color: white;
+      background: linear-gradient(135deg, var(--blue), #06b6d4);
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 16px 34px rgba(37, 99, 235, .22);
+    }
+    button.secondary {
+      color: var(--ink);
+      background: white;
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .55;
+    }
+    .status {
+      margin-top: 18px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: #0f172a;
+      color: white;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+    .result {
+      margin-top: 22px;
+      display: grid;
+      gap: 16px;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: rgba(255,255,255,.82);
+      padding: 20px;
+    }
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 17px;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      color: var(--sky);
+    }
+    .text {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.9;
+      white-space: pre-wrap;
+    }
+    .segment {
+      border-top: 1px solid var(--line);
+      padding: 13px 0;
+      line-height: 1.75;
+    }
+    .segment:first-of-type { border-top: 0; }
+    .meta {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <p class="kicker">Silver Voice NAS GPU</p>
+      <h1>STT inference test</h1>
+      <p class="copy">Upload an elderly speaker audio file here. This page calls the NAS inference API directly, so it does not need the full Next.js frontend, login, or npm.</p>
+    </section>
+    <section class="card">
+      <div id="drop" class="drop">
+        <div>
+          <strong>Drag and drop an audio file</strong>
+          <span>or select wav, mp3, m4a, webm, mp4, flac, aac, ogg.</span>
+          <br />
+          <input id="file" type="file" accept="audio/*" />
+        </div>
+      </div>
+      <div class="controls">
+        <button id="transcribe" disabled>Run STT</button>
+        <button id="warmup" class="secondary">Warm up model</button>
+        <button id="health" class="secondary">Check health</button>
+      </div>
+      <div id="status" class="status">Waiting for an audio file.</div>
+      <div id="result" class="result"></div>
+    </section>
+  </main>
+  <script>
+    const fileInput = document.querySelector("#file");
+    const drop = document.querySelector("#drop");
+    const button = document.querySelector("#transcribe");
+    const warmupButton = document.querySelector("#warmup");
+    const healthButton = document.querySelector("#health");
+    const statusBox = document.querySelector("#status");
+    const resultBox = document.querySelector("#result");
+    let selectedFile = null;
+
+    function setStatus(message) {
+      statusBox.textContent = message;
+    }
+
+    function selectFile(file) {
+      selectedFile = file;
+      button.disabled = !file;
+      resultBox.innerHTML = "";
+      setStatus(file ? `Selected: ${file.name} (${Math.round(file.size / 1024 / 1024 * 10) / 10} MB)` : "Waiting for an audio file.");
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[char]);
+    }
+
+    async function callJson(path, options = {}) {
+      const response = await fetch(path, options);
+      const text = await response.text();
+      let data;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = { raw: text };
+      }
+      if (!response.ok) {
+        throw new Error(JSON.stringify(data, null, 2));
+      }
+      return data;
+    }
+
+    function renderResult(data) {
+      const segments = data.segments || [];
+      resultBox.innerHTML = `
+        <article class="panel">
+          <h2>Full text</h2>
+          <p class="text">${escapeHtml(data.full_text || "")}</p>
+        </article>
+        <article class="panel">
+          <h2>Summary</h2>
+          <p class="text">Duration: ${Number(data.duration || 0).toFixed(1)}s
+Runtime: ${Number(data.runtime_seconds || 0).toFixed(1)}s
+Confidence: ${Number(data.average_confidence || 0).toFixed(3)}
+Segments: ${segments.length}</p>
+        </article>
+        <article class="panel">
+          <h2>Segments</h2>
+          ${segments.map((segment) => `
+            <div class="segment">
+              <div class="meta">${Number(segment.start_sec || 0).toFixed(1)}s - ${Number(segment.end_sec || 0).toFixed(1)}s | confidence ${Number(segment.confidence || 0).toFixed(3)}</div>
+              <div>${escapeHtml(segment.text || "")}</div>
+            </div>
+          `).join("")}
+        </article>
+      `;
+    }
+
+    fileInput.addEventListener("change", () => selectFile(fileInput.files?.[0] || null));
+
+    ["dragenter", "dragover"].forEach((name) => {
+      drop.addEventListener(name, (event) => {
+        event.preventDefault();
+        drop.classList.add("dragging");
+      });
+    });
+    ["dragleave", "drop"].forEach((name) => {
+      drop.addEventListener(name, (event) => {
+        event.preventDefault();
+        drop.classList.remove("dragging");
+      });
+    });
+    drop.addEventListener("drop", (event) => {
+      const file = Array.from(event.dataTransfer.files || []).find((item) => item.type.startsWith("audio/") || /\.(wav|mp3|m4a|webm|mp4|flac|aac|ogg)$/i.test(item.name));
+      selectFile(file || null);
+    });
+
+    healthButton.addEventListener("click", async () => {
+      try {
+        setStatus("Checking health...");
+        const data = await callJson("./health");
+        setStatus(JSON.stringify(data, null, 2));
+      } catch (error) {
+        setStatus(`Health failed:\\n${error.message}`);
+      }
+    });
+
+    warmupButton.addEventListener("click", async () => {
+      try {
+        setStatus("Loading model on GPU. This can take a moment...");
+        const data = await callJson("./warmup", { method: "POST" });
+        setStatus(JSON.stringify(data, null, 2));
+      } catch (error) {
+        setStatus(`Warmup failed:\\n${error.message}`);
+      }
+    });
+
+    button.addEventListener("click", async () => {
+      if (!selectedFile) return;
+      const form = new FormData();
+      form.append("file", selectedFile);
+      form.append("chunk_seconds", "30");
+      form.append("chunk_overlap_seconds", "0");
+      form.append("max_new_tokens", "256");
+      try {
+        button.disabled = true;
+        setStatus("Running STT on NAS GPU...");
+        const data = await callJson("./transcribe", { method: "POST", body: form });
+        setStatus("STT completed.");
+        renderResult(data);
+      } catch (error) {
+        setStatus(`STT failed:\\n${error.message}`);
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>"""
 
 
 def _read_audio(audio_path: Path) -> tuple[Any, int, float]:
@@ -201,6 +537,16 @@ def _load_model() -> dict[str, Any]:
         "processor": processor,
         "model": model,
     }
+
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+def root_ui() -> HTMLResponse:
+    return HTMLResponse(_render_test_ui())
+
+
+@app.get("/ui", response_class=HTMLResponse, include_in_schema=False)
+def test_ui() -> HTMLResponse:
+    return HTMLResponse(_render_test_ui())
 
 
 @app.get("/health")
