@@ -1,3 +1,4 @@
+import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import { TranscriptEditor } from "@/components/transcript-editor";
@@ -44,4 +45,3 @@ describe("TranscriptEditor", () => {
     expect(screen.getByDisplayValue("사용자 수정 문장")).toBeInTheDocument();
   });
 });
-

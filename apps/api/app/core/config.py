@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     celery_broker_url: str = "redis://localhost:6379/1"
     celery_result_backend: str = "redis://localhost:6379/2"
+    celery_task_always_eager: bool = False
 
     minio_endpoint: str = "localhost:9000"
     minio_public_endpoint: str = "localhost:9000"

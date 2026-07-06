@@ -312,7 +312,7 @@ export async function downloadCorrectionsExport(token: string) {
 }
 
 export function subscribeToJobEvents(jobId: string, token: string, onEvent: (event: JobEvent) => void) {
-  const url = new URL(`${API_BASE_URL}/jobs/${jobId}/events`);
+  const url = new URL(`${API_BASE_URL}/jobs/${jobId}/events`, window.location.origin);
   url.searchParams.set("access_token", token);
   const eventSource = new EventSource(url.toString(), { withCredentials: false });
   eventSource.onmessage = (event) => {

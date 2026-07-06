@@ -8,6 +8,7 @@ from stt_inference.config import InferenceSettings
 from stt_inference.diarization import assign_speakers_to_segments, run_speaker_diarization
 from stt_inference.engine import WhisperEngine
 from stt_inference.postprocess import normalize_korean_text
+from stt_inference.remote_api import is_remote_backend, transcribe_with_remote_api
 from stt_inference.schemas import InferenceResult, SegmentResult
 
 
@@ -28,25 +29,36 @@ def run_stt_pipeline(
 
     ensure_parent(mono_path)
     converted_path = convert_to_mono_16k(input_path, mono_path)
-    # Diarization relies on the original timeline, so do not concatenate voiced
-    # frames when speaker assignment is requested.
-    voiced_path = (
-        converted_path
-        if enable_speaker_diarization
-        else apply_energy_vad(converted_path, vad_path)
-    )
-    processed_path = reduce_noise_if_enabled(voiced_path, denoise_path, enable_noise_reduction)
 
-    engine = WhisperEngine(
-        model_path=settings.model_path,
-        download_root=settings.download_root,
-        device=settings.device,
-        compute_type=settings.compute_type,
-        beam_size=settings.beam_size,
-        best_of=settings.best_of,
-        mock_mode=settings.mock_mode,
-    )
-    raw = engine.transcribe(processed_path, display_name=display_name)
+    if is_remote_backend(settings.model_backend):
+        # The NAS inference API performs its own chunking, so keep the original
+        # converted timeline instead of concatenating VAD frames locally.
+        processed_path = reduce_noise_if_enabled(converted_path, denoise_path, enable_noise_reduction)
+        raw = transcribe_with_remote_api(
+            input_path=processed_path,
+            settings=settings,
+            display_name=display_name,
+        )
+    else:
+        # Diarization relies on the original timeline, so do not concatenate
+        # voiced frames when speaker assignment is requested.
+        voiced_path = (
+            converted_path
+            if enable_speaker_diarization
+            else apply_energy_vad(converted_path, vad_path)
+        )
+        processed_path = reduce_noise_if_enabled(voiced_path, denoise_path, enable_noise_reduction)
+
+        engine = WhisperEngine(
+            model_path=settings.model_path,
+            download_root=settings.download_root,
+            device=settings.device,
+            compute_type=settings.compute_type,
+            beam_size=settings.beam_size,
+            best_of=settings.best_of,
+            mock_mode=settings.mock_mode,
+        )
+        raw = engine.transcribe(processed_path, display_name=display_name)
     calibrator = ConfidenceCalibrator.from_file(settings.confidence_calibration_path)
     raw_segments = raw["segments"]
     raw_duration = max((float(segment["end_sec"]) for segment in raw_segments), default=0.0)

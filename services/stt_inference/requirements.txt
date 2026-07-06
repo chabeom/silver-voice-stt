@@ -3,3 +3,4 @@ pydantic==2.10.4
 numpy==2.2.1
 noisereduce==3.0.3
 pyannote.audio>=4.0,<5
+requests==2.32.5

@@ -19,6 +19,12 @@ class InferenceSettings:
     diarization_device: str = "cpu"
     diarization_hf_token: str | None = None
     mock_mode: bool = False
+    remote_api_url: str = "http://127.0.0.1:9001/transcribe"
+    remote_timeout_seconds: float = 900.0
+    remote_chunk_seconds: float = 30.0
+    remote_chunk_overlap_seconds: float = 0.0
+    remote_min_chunk_rms: float = 0.0005
+    remote_max_new_tokens: int = 256
 
     @classmethod
     def from_env(cls) -> "InferenceSettings":
@@ -39,4 +45,10 @@ class InferenceSettings:
             diarization_device=os.getenv("STT_DIARIZATION_DEVICE", os.getenv("STT_DEVICE", "cpu")),
             diarization_hf_token=os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN") or None,
             mock_mode=os.getenv("STT_MOCK_MODE", "false").lower() == "true",
+            remote_api_url=os.getenv("STT_REMOTE_API_URL", "http://127.0.0.1:9001/transcribe"),
+            remote_timeout_seconds=float(os.getenv("STT_REMOTE_TIMEOUT_SECONDS", "900")),
+            remote_chunk_seconds=float(os.getenv("STT_REMOTE_CHUNK_SECONDS", "30")),
+            remote_chunk_overlap_seconds=float(os.getenv("STT_REMOTE_CHUNK_OVERLAP_SECONDS", "0")),
+            remote_min_chunk_rms=float(os.getenv("STT_REMOTE_MIN_CHUNK_RMS", "0.0005")),
+            remote_max_new_tokens=int(os.getenv("STT_REMOTE_MAX_NEW_TOKENS", "256")),
         )

@@ -16,5 +16,7 @@ celery_app.conf.update(
     result_serializer="json",
     timezone="Asia/Seoul",
     task_track_started=True,
+    task_always_eager=settings.celery_task_always_eager,
+    task_store_eager_result=settings.celery_task_always_eager,
     imports=("app.tasks.stt_tasks",),
 )

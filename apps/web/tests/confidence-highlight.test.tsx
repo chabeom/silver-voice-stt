@@ -1,3 +1,4 @@
+import React from "react";
 import { render, screen } from "@testing-library/react";
 
 import { ConfidenceHighlight } from "@/components/confidence-highlight";
@@ -19,7 +20,7 @@ describe("ConfidenceHighlight", () => {
       />
     );
 
-    expect(screen.getByText("이 구간은 다시 확인하는 것을 권장합니다.")).toBeInTheDocument();
+    expect(screen.getByText("낮은 confidence 구간입니다. 원본 오디오와 함께 다시 확인해 주세요.")).toBeInTheDocument();
   });
 
   it("renders the assigned speaker", () => {

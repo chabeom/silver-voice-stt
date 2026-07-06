@@ -1,3 +1,5 @@
+import React from "react";
+
 import type { TranscriptSegment } from "@silver-voice/shared-types";
 
 import { Badge, Card, CardContent, Progress } from "@silver-voice/ui";

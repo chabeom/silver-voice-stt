@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 
 import type { JobDetail } from "@silver-voice/shared-types";
 import { Button, Card, CardContent, CardHeader, CardTitle, Progress, Textarea } from "@silver-voice/ui";
